@@ -1,0 +1,39 @@
+# --- Python / tooling ---
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+build/
+dist/
+
+# --- Secrets ---
+.env
+
+# --- Data: raw downloads are never committed ---
+data/raw/*
+!data/raw/.gitkeep
+
+# --- Data: only compact serving artifacts are committed (< 25 MB total) ---
+data/processed/*
+!data/processed/.gitkeep
+!data/processed/*.parquet
+!data/processed/looker_executive_mart.csv
+!data/processed/data_lineage.json
+
+# --- Data: deterministic GenAI fallback cache is committed ---
+data/fallback/*
+!data/fallback/.gitkeep
+!data/fallback/genai_cache.json
+
+# --- OS / editor ---
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# --- DuckDB spill directory ---
+data/.duckdb_tmp/

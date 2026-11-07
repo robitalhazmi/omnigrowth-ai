@@ -1,0 +1,170 @@
+{
+  "generated_at": "2026-11-06T22:35:01+00:00",
+  "duckdb_guardrails": {
+    "memory_limit": "192MB",
+    "threads": 1
+  },
+  "raw_sources": [
+    {
+      "key": "olist_orders",
+      "file": "olist_orders_dataset.csv",
+      "dataset": "Olist Brazilian E-Commerce Public Dataset (Kaggle, 100k orders 2016-2018)",
+      "license": "CC BY-NC-SA 4.0",
+      "mode": "cached_download",
+      "url": "https://raw.githubusercontent.com/olist/work-at-olist-data/master/datasets/olist_orders_dataset.csv",
+      "sha256": "8df58ef3d2d7e9944010f7beecd9b75367f5588ec6e3c91cec19ae3345ef9ecf",
+      "size_bytes": 17654914,
+      "rows": 99441
+    },
+    {
+      "key": "olist_order_items",
+      "file": "olist_order_items_dataset.csv",
+      "dataset": "Olist Brazilian E-Commerce Public Dataset (Kaggle, 100k orders 2016-2018)",
+      "license": "CC BY-NC-SA 4.0",
+      "mode": "cached_download",
+      "url": "https://raw.githubusercontent.com/olist/work-at-olist-data/master/datasets/olist_order_items_dataset.csv",
+      "sha256": "4f6abdbbc94036d0df4a76fa0520c072e31a40119d70f7f370fba1e2285d2bcb",
+      "size_bytes": 15007623,
+      "rows": 112650
+    },
+    {
+      "key": "olist_customers",
+      "file": "olist_customers_dataset.csv",
+      "dataset": "Olist Brazilian E-Commerce Public Dataset (Kaggle, 100k orders 2016-2018)",
+      "license": "CC BY-NC-SA 4.0",
+      "mode": "cached_download",
+      "url": "https://raw.githubusercontent.com/olist/work-at-olist-data/master/datasets/olist_customers_dataset.csv",
+      "sha256": "c26c17f59f3027a6a0dbeb8f1fa373c38f3323ecc84f225a8f4820e5bb288df8",
+      "size_bytes": 8562270,
+      "rows": 99441
+    },
+    {
+      "key": "olist_payments",
+      "file": "olist_order_payments_dataset.csv",
+      "dataset": "Olist Brazilian E-Commerce Public Dataset (Kaggle, 100k orders 2016-2018)",
+      "license": "CC BY-NC-SA 4.0",
+      "mode": "cached_download",
+      "url": "https://raw.githubusercontent.com/olist/work-at-olist-data/master/datasets/olist_order_payments_dataset.csv",
+      "sha256": "61674868ed7b872aac3dcd95bf774448a88f6426b183f21be55f75af021ffdec",
+      "size_bytes": 5647783,
+      "rows": 103886
+    },
+    {
+      "key": "olist_products",
+      "file": "olist_products_dataset.csv",
+      "dataset": "Olist Brazilian E-Commerce Public Dataset (Kaggle, 100k orders 2016-2018)",
+      "license": "CC BY-NC-SA 4.0",
+      "mode": "cached_download",
+      "url": "https://raw.githubusercontent.com/olist/work-at-olist-data/master/datasets/olist_products_dataset.csv",
+      "sha256": "3e6569628a17fbc75fd206ee357b59e20364b9afa90f5b6cd5b4d624c58aa9cc",
+      "size_bytes": 2379446,
+      "rows": 32951
+    },
+    {
+      "key": "olist_category_translation",
+      "file": "product_category_name_translation.csv",
+      "dataset": "Olist Brazilian E-Commerce Public Dataset (Kaggle, 100k orders 2016-2018)",
+      "license": "CC BY-NC-SA 4.0",
+      "mode": "cached_download",
+      "url": "https://raw.githubusercontent.com/olist/work-at-olist-data/master/datasets/product_category_name_translation.csv",
+      "sha256": "a81f0d1f27b27e7293f761bc79e3ce8f348ee39c4b3ed3e49bde38f478586278",
+      "size_bytes": 2613,
+      "rows": 71
+    },
+    {
+      "key": "olist_mql",
+      "file": "olist_marketing_qualified_leads_dataset.csv",
+      "dataset": "Olist Marketing Funnel Dataset (Kaggle, 8k MQLs 2017-2018)",
+      "license": "CC BY-NC-SA 4.0",
+      "mode": "cached_download",
+      "url": "https://raw.githubusercontent.com/dujiaying/olist/master/data/olist_marketing_qualified_leads_dataset.csv",
+      "sha256": "5537753b7549ce4068e52e2402c29f2773c5375fc0575520ae8f3f301f666573",
+      "size_bytes": 703836,
+      "rows": 8000
+    },
+    {
+      "key": "olist_closed_deals",
+      "file": "olist_closed_deals_dataset.csv",
+      "dataset": "Olist Marketing Funnel Dataset (Kaggle, 8k MQLs 2017-2018)",
+      "license": "CC BY-NC-SA 4.0",
+      "mode": "cached_download",
+      "url": "https://raw.githubusercontent.com/dujiaying/olist/master/data/olist_closed_deals_dataset.csv",
+      "sha256": "1433f402d8fff00ca167579de641d9525f6e846368958c166f699ef1b0c31f3d",
+      "size_bytes": 171352,
+      "rows": 842
+    },
+    {
+      "key": "ab_test",
+      "file": "ab_data.csv",
+      "dataset": "E-Commerce Landing Page A/B Test (Udacity / Kaggle ab_data.csv, 294k users)",
+      "license": "Public educational dataset (Udacity DAND / Kaggle)",
+      "mode": "cached_download",
+      "url": "https://raw.githubusercontent.com/aaubs/data_science_master/main/data/ab_data.csv",
+      "sha256": "d56e2accec25e99ac21cb3d76c5df516dd19cc7a77c14c9014f94e1ea1301beb",
+      "size_bytes": 15901933,
+      "rows": 294478
+    },
+    {
+      "key": "ga4_events",
+      "file": "ga4_events_raw.parquet",
+      "dataset": "Google Merchandise Store GA4 export (bigquery-public-data.ga4_obfuscated_sample_ecommerce)",
+      "license": "Schema-faithful calibrated replica (no raw GA4 rows redistributed)",
+      "mode": "calibrated_replica",
+      "url": null,
+      "sha256": "25996066b63452d427280ed72a1606bb5744d2cfc6b7cb51388a3ec042008dd6",
+      "size_bytes": 4756836,
+      "rows": 268365,
+      "generator": {
+        "n_users": 90000,
+        "seed": 42,
+        "start_date": "2020-11-01",
+        "end_date": "2021-01-31"
+      }
+    }
+  ],
+  "processed_artifacts": [
+    {
+      "file": "ga4_events.parquet",
+      "rows": 268365,
+      "columns": 11,
+      "size_bytes": 3611433
+    },
+    {
+      "file": "regional_demand.parquet",
+      "rows": 98496,
+      "columns": 12,
+      "size_bytes": 406581
+    },
+    {
+      "file": "ab_experiment_logs.parquet",
+      "rows": 290584,
+      "columns": 11,
+      "size_bytes": 1868606
+    },
+    {
+      "file": "mql_funnel.parquet",
+      "rows": 8000,
+      "columns": 9,
+      "size_bytes": 167361
+    },
+    {
+      "file": "looker_executive_mart.csv",
+      "rows": 28117,
+      "columns": 24,
+      "size_bytes": 2091415
+    }
+  ],
+  "processed_total_mb": 8.145,
+  "methodology_notes": {
+    "ga4_events": "Flattened GA4 funnel events (BigQuery export, or schema-faithful calibrated replica of the Google Merchandise Store sample when no GCP credentials are available \u2014 see raw_sources[].mode).",
+    "regional_demand": "Real Olist orders aggregated to a dense daily state x segment panel; promo_discount_pct = real voucher share of order value; cumulative_active_merchants = distinct sellers serving the region.",
+    "ab_experiment_logs": "Real randomized assignment and conversion (ab_data.csv, misaligned rows removed, first exposure kept). CUPED covariates, revenue and retention are seeded imputations.",
+    "ab_enrichment_config": {
+      "seed": 42,
+      "treatment_revenue_lift": 0.04,
+      "treatment_retention_logit": 0.08,
+      "conversion_value_shift": 0.35
+    },
+    "mql_funnel": "Real Olist marketing-qualified leads joined to closed merchant deals."
+  }
+}

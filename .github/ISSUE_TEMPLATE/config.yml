@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Architecture & Implementation Plan
+    url: https://github.com/robitalhazmi/omnigrowth-ai/blob/main/implementation_plan.md
+    about: Review the system architecture, data lineage, and mathematical specifications before opening an issue.
+  - name: Walkthrough & Deployment Guide
+    url: https://github.com/robitalhazmi/omnigrowth-ai/blob/main/walkthrough_guide.md
+    about: Step-by-step instructions for local setup, offline model training, and low-memory VPS deployment.

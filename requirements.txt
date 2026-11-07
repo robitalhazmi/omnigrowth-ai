@@ -1,0 +1,29 @@
+# OmniGrowth-AI — lightweight, CPU-friendly dependencies (Python 3.11+)
+# Core OLAP + dataframe stack
+duckdb>=1.1.0
+pandas>=2.2.0
+pyarrow>=17.0.0
+numpy>=1.26.0
+
+# Statistics, experimentation & optimization
+scipy>=1.13.0
+statsmodels>=0.14.2
+scikit-learn>=1.5.0
+
+# Time-series forecasting (offline training only — never fit inside Streamlit requests)
+prophet>=1.1.5
+statsforecast>=1.7.6
+
+# Reporting & UI
+openpyxl>=3.1.5
+plotly>=5.23.0
+streamlit>=1.38.0
+
+# GenAI HTTP clients, validation & configuration
+httpx>=0.27.0
+pydantic>=2.8.0
+python-dotenv>=1.0.1
+
+# Quality gates
+pytest>=8.3.0
+ruff>=0.6.0

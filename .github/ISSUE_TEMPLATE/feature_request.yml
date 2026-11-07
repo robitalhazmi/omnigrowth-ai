@@ -1,0 +1,50 @@
+name: Feature Request
+description: Propose a new analytical capability, statistical model, SQL query, or UI enhancement.
+title: "[Feature]: "
+labels: ["enhancement", "type: feature"]
+assignees:
+  - robitalhazmi
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Propose an enhancement or new capability for **OmniGrowth-AI**. Please keep our architectural guardrails in mind (`< 300 MB` live RSS memory ceiling, `< 300` lines per Python module, and offline training for heavy models).
+
+  - type: textarea
+    id: problem_statement
+    attributes:
+      label: Problem Statement
+      description: What analytical, experimentation, or decision-making problem does this feature solve?
+      placeholder: As an analyst / decision-maker, I need ... so that ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed_solution
+    attributes:
+      label: Proposed Solution
+      description: Describe the statistical method, DuckDB SQL logic, or UI workflow you want to introduce.
+      placeholder: Outline the module path (e.g., `src/...`), algorithm, and expected inputs/outputs...
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives_considered
+    attributes:
+      label: Alternatives Considered
+      description: What alternative approaches, libraries, or approximations did you consider, and what are their memory/latency trade-offs?
+      placeholder: Describe alternative designs or libraries evaluated...
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: Acceptance Criteria
+      description: Concrete, testable conditions that must be met for this feature to be complete (including unit tests in `tests/`).
+      placeholder: |
+        - [ ] Implemented in `src/...` (< 300 lines, strict type hints)
+        - [ ] Unit tests added in `tests/test_...py` with 100% pass rate
+        - [ ] Respects DuckDB 192MB / 1-thread guardrail
+    validations:
+      required: true

@@ -1,0 +1,30 @@
+name: Project Board Sync
+
+# Automatically adds newly opened Issues and Pull Requests to a GitHub Project v2 board
+# when repository variable `PROJECT_URL` (e.g., https://github.com/users/robitalhazmi/projects/1)
+# and secret `ADD_TO_PROJECT_PAT` (a classic PAT or fine-grained token with `project` scope)
+# are configured in Settings -> Secrets and variables -> Actions.
+on:
+  issues:
+    types:
+      - opened
+      - reopened
+  pull_request:
+    types:
+      - opened
+      - reopened
+
+permissions:
+  contents: read
+
+jobs:
+  sync-to-project:
+    name: sync-to-project
+    runs-on: ubuntu-latest
+    if: ${{ vars.PROJECT_URL != '' }}
+    steps:
+      - name: Add issue or PR to GitHub Project v2
+        uses: actions/add-to-project@v1.0.2
+        with:
+          project-url: ${{ vars.PROJECT_URL }}
+          github-token: ${{ secrets.ADD_TO_PROJECT_PAT }}
