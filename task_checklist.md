@@ -96,45 +96,45 @@
 
 ## Phase 2: Module 1 — Advanced SQL Lab & GA4 Funnel Analytics
 
-- [ ] **2.1 Build Parameterized Advanced SQL Catalog (`src/analytics/sql_queries.py`)**
+- [x] **2.1 Build Parameterized Advanced SQL Catalog (`src/analytics/sql_queries.py`)**
   - Write production-documented DuckDB SQL queries showcasing advanced analytical SQL constructs:
     1. **Strict Chronological Closed-Funnel SQL:** Uses multi-stage CTEs (`WITH s1 AS (...), s2 AS (...)`) and `ROW_NUMBER() OVER (PARTITION BY user_pseudo_id, ga_session_id ORDER BY event_timestamp)` across the 5 GA4 funnel stages (`session_start`, `view_item`, `add_to_cart`, `begin_checkout`, `purchase`).
     2. **User Purchase Velocity & Inter-Arrival Lag SQL:** Uses `LAG(event_date) OVER (PARTITION BY user_pseudo_id ORDER BY event_date)` and `LEAD()` to measure repeat purchase intervals and churn risk by cohort.
     3. **RFM Customer Segmentation & Rolling Window SQL:** Uses `NTILE(4) OVER (ORDER BY total_spend DESC)` for quartile segmentation and `AVG(daily_revenue) OVER (PARTITION BY geo_region ORDER BY event_date ROWS BETWEEN 6 PRECEDING AND CURRENT ROW)` for 7-day moving averages.
 
-- [ ] **2.2 Implement GA4 Funnel & Cohort Analytics Service (`src/analytics/ga4_funnel.py`)**
+- [x] **2.2 Implement GA4 Funnel & Cohort Analytics Service (`src/analytics/ga4_funnel.py`)**
   - Implement functions returning structured DataFrames and summary KPIs:
     - `get_funnel_conversion_summary(region, device, start_date, end_date)`
     - `get_dropoff_attribution_by_segment(dimension)`
     - `get_cohort_retention_matrix()`
     - `execute_readonly_sql_lab(query_str)`
 
-- [ ] **2.3 Write Unit Tests (`tests/test_duckdb_queries.py`)**
+- [x] **2.3 Write Unit Tests (`tests/test_duckdb_queries.py`)**
   - Test that all catalog SQL queries execute in $< 200\text{ ms}$, return non-empty DataFrames, enforce monotonic funnel counts ($N_{\text{session}} \ge N_{\text{view}} \ge N_{\text{cart}} \ge N_{\text{checkout}} \ge N_{\text{purchase}}$), and respect the DuckDB `192MB` memory limit.
 
-- [ ] **2.4 Phase 2 Verification Gate**
+- [x] **2.4 Phase 2 Verification Gate**
   - Run `pytest tests/test_duckdb_queries.py -v` and confirm $100\%$ pass rate.
 
 ---
 
 ## Phase 3: Module 2 — Frequentist (CUPED, Sequential) & Bayesian A/B Testing Engine
 
-- [ ] **3.1 Implement Sample Size & Power Calculator (`src/experimentation/power_analysis.py`)**
+- [x] **3.1 Implement Sample Size & Power Calculator (`src/experimentation/power_analysis.py`)**
   - Implement two-proportion and two-sample continuous power calculators computing minimum sample size $n$ per arm given baseline rate $p_1$, Minimum Detectable Effect ($MDE$), significance level $\alpha \in [0.01, 0.10]$, and power $1 - \beta \in [0.70, 0.95]$.
   - Generate power curves across varying sample sizes and MDE thresholds.
 
-- [ ] **3.2 Implement Frequentist A/B & CUPED Variance Reduction (`src/experimentation/frequentist_ab.py`)**
+- [x] **3.2 Implement Frequentist A/B & CUPED Variance Reduction (`src/experimentation/frequentist_ab.py`)**
   - Implement standard two-sample $Z$-test for conversion rate and Welch's $t$-test for continuous revenue.
   - Implement **CUPED (Controlled-experiment Using Pre-Experiment Data)**:
     $$\hat{Y}_i^{\text{CUPED}} = Y_i - \theta (X_i - \bar{X}), \quad \theta = \frac{\text{Cov}(Y, X)}{\text{Var}(X)}$$
   - Return both unadjusted and CUPED-adjusted lift estimates, standard errors, $p$-values, $95\%$ confidence intervals, and percentage variance reduction ($1 - \rho_{X,Y}^2$).
 
-- [ ] **3.3 Implement O'Brien-Fleming Sequential Testing (`src/experimentation/sequential_testing.py`)**
+- [x] **3.3 Implement O'Brien-Fleming Sequential Testing (`src/experimentation/sequential_testing.py`)**
   - Compute daily cumulative $Z$-statistics over experiment duration $t_k = k/K \in (0, 1]$ and compare against O'Brien-Fleming $\alpha$-spending boundaries:
     $$\alpha(t_k) = 2 - 2\Phi\left(\frac{Z_{1 - \alpha/2}}{\sqrt{t_k}}\right)$$
   - Flag early stopping for efficacy or futility without inflating Type I error.
 
-- [ ] **3.4 Implement Analytical Conjugate Bayesian A/B Engine (`src/experimentation/bayesian_ab.py`)**
+- [x] **3.4 Implement Analytical Conjugate Bayesian A/B Engine (`src/experimentation/bayesian_ab.py`)**
   - Implement Beta-Binomial conjugate updating ($\text{Beta}(\alpha_0 + s, \beta_0 + n - s)$) for conversion rates and Normal-Inverse-Gamma updating for continuous revenue using `scipy.stats` (zero MCMC RAM overhead).
   - Compute and return:
     - Posterior probability treatment beats control: $P(p_B > p_A)$
@@ -142,11 +142,11 @@
     - Probability inside the Region of Practical Equivalence ($ROPE$, default $[-0.2\%, +0.2\%]$)
     - $95\%$ Highest Density Credible Intervals ($HDI$).
 
-- [ ] **3.5 Write Unit Tests (`tests/test_experimentation.py`)**
+- [x] **3.5 Write Unit Tests (`tests/test_experimentation.py`)**
   - Verify CUPED strictly reduces standard error when $\text{Corr}(X, Y) > 0.3$.
   - Verify Bayesian $P(p_B > p_A) \in [0, 1]$, Expected Loss $\ge 0$, and sequential boundaries converge to $Z_{1-\alpha/2}$ at $t_K = 1.0$.
 
-- [ ] **3.6 Phase 3 Verification Gate**
+- [x] **3.6 Phase 3 Verification Gate**
   - Run `pytest tests/test_experimentation.py -v` and confirm $100\%$ pass rate.
 
 ---
