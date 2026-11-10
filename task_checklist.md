@@ -153,35 +153,35 @@
 
 ## Phase 4: Module 3 — Time-Series Forecasting (`Prophet`, `AutoARIMA`) & S-Curve Growth Modeling
 
-- [ ] **4.1 Implement S-Curve Market Adoption Modeler (`src/forecasting/s_curve.py`)**
+- [x] **4.1 Implement S-Curve Market Adoption Modeler (`src/forecasting/s_curve.py`)**
   - Implement non-linear least squares curve fitting (`scipy.optimize.curve_fit`) with bounded parameters for:
     1. **Logistic Growth Model:** $N(t) = \frac{M}{1 + \exp(-k(t - t_0))}$
     2. **Bass Diffusion Model:** $N(t) = M \cdot \frac{1 - \exp(-(p+q)t)}{1 + (q/p)\exp(-(p+q)t)}$
   - Extract and return carrying capacity $M$ (TAM ceiling), innovation coefficient $p$ (marketing effect), imitation coefficient $q$ (network effect), peak adoption timing $t^* = \frac{\ln(q/p)}{p+q}$, and goodness-of-fit $R^2$.
 
-- [ ] **4.2 Implement Time-Series Forecasting & Scenario Engine (`src/forecasting/time_series.py`)**
+- [x] **4.2 Implement Time-Series Forecasting & Scenario Engine (`src/forecasting/time_series.py`)**
   - Implement offline training wrapper comparing **Meta `Prophet`** (with seasonality, Indonesian national holidays, and promotional discount regressor) and **Nixtla `StatsForecast` (`AutoARIMA`)**.
   - Implement rolling-origin cross-validation computing $MAPE$, $RMSE$, $sMAPE$, and $80\% / 95\%$ empirical prediction interval coverage.
   - Implement fast online scenario adjuster (`apply_scenario_shock(base_forecast_df, spend_change_pct, promo_discount_pct, conversion_lift_pct)`) that recalculates forecast trajectories and shifts Bass S-curve parameters ($p \rightarrow p(1 + \delta_{\text{spend}})$) in $< 50\text{ ms}$.
 
-- [ ] **4.3 Build Offline Model Training Script (`scripts/train_forecasts.py`)**
+- [x] **4.3 Build Offline Model Training Script (`scripts/train_forecasts.py`)**
   - Train `Prophet`, `AutoARIMA`, and Bass Diffusion S-Curve models across all regional cohorts on the local laptop and save pre-computed forecast trajectories, residuals, and S-curve parameter tables to:
     - `data/processed/forecasts_pretrained.parquet`
     - `data/processed/scurve_params.parquet`
     - `data/processed/model_backtest_metrics.parquet`
 
-- [ ] **4.4 Write Unit Tests (`tests/test_forecasting_scurve.py`)**
+- [x] **4.4 Write Unit Tests (`tests/test_forecasting_scurve.py`)**
   - Test Bass Diffusion parameter recovery on synthetic noise-free S-curve series ($p=0.03, q=0.38, M=10000$) within $5\%$ tolerance.
   - Test that pre-computed forecast artifacts contain valid $80\%$ and $95\%$ confidence bounds ($\hat{y}_{\text{lower,95}} \le \hat{y}_{\text{lower,80}} \le \hat{y} \le \hat{y}_{\text{upper,80}} \le \hat{y}_{\text{upper,95}}$).
 
-- [ ] **4.5 Phase 4 Verification Gate**
+- [x] **4.5 Phase 4 Verification Gate**
   - Run `python scripts/train_forecasts.py && pytest tests/test_forecasting_scurve.py -v` and confirm $100\%$ pass rate.
 
 ---
 
 ## Phase 5: Module 4 — Prescriptive Supply Chain & Marketing Budget Optimization
 
-- [ ] **5.1 Implement Constrained Prescriptive Solver (`src/optimization/prescriptive_solver.py`)**
+- [x] **5.1 Implement Constrained Prescriptive Solver (`src/optimization/prescriptive_solver.py`)**
   - Formulate the multi-region marketing spend ($b_r$) and inventory stock ($I_r$) optimization problem using `scipy.optimize.minimize(..., method='SLSQP')`.
   - Maximize expected regional net contribution margin minus inventory holding cost ($c_{\text{hold}}$) and stockout penalty ($c_{\text{short}}$) subject to:
     - Total promotional budget cap: $\sum_{r=1}^R b_r \le B_{\text{total}}$
@@ -189,10 +189,10 @@
     - Regional service-level safety stock floor: $I_r \ge \hat{D}_{r, 0.80}(b_r)$
   - Return a comparison DataFrame of **Baseline vs. Optimal Allocation** per region, expected incremental revenue, stockout reduction percentage, and ROI lift.
 
-- [ ] **5.2 Write Unit Tests (`tests/test_prescriptive_solver.py`)**
+- [x] **5.2 Write Unit Tests (`tests/test_prescriptive_solver.py`)**
   - Verify solver converges (`success == True`), respects total budget $\sum b_r \le B_{\text{total}} + 10^{-4}$, satisfies regional safety stock floors, and achieves net contribution margin $\ge$ equal-weight baseline allocation.
 
-- [ ] **5.3 Phase 5 Verification Gate**
+- [x] **5.3 Phase 5 Verification Gate**
   - Run `pytest tests/test_prescriptive_solver.py -v` and confirm $100\%$ pass rate.
 
 ---
