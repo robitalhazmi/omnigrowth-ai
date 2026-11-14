@@ -1,0 +1,78 @@
+{
+  "version": "1.0",
+  "curated_prompts": [
+    {
+      "id": "funnel_by_device",
+      "question": "Which device category has the highest checkout drop-off and conversion rate in GA4?",
+      "keywords": ["device", "mobile", "desktop", "tablet", "checkout", "drop-off", "dropoff", "funnel", "conversion"],
+      "sql": "WITH flags AS (SELECT user_pseudo_id, ga_session_id, ANY_VALUE(device_category) AS device_category, MIN(event_timestamp) FILTER (WHERE event_name='session_start') AS t1, MIN(event_timestamp) FILTER (WHERE event_name='add_to_cart') AS t3, MIN(event_timestamp) FILTER (WHERE event_name='begin_checkout') AS t4, MIN(event_timestamp) FILTER (WHERE event_name='purchase') AS t5, SUM(CASE WHEN event_name='purchase' THEN COALESCE(event_value_in_usd,0) ELSE 0 END) AS rev FROM v_ga4_events GROUP BY user_pseudo_id, ga_session_id) SELECT device_category, COUNT(*) FILTER (WHERE t1 IS NOT NULL) AS sessions, COUNT(*) FILTER (WHERE t3>=t1) AS cart_sessions, COUNT(*) FILTER (WHERE t4>=t3) AS checkout_sessions, COUNT(*) FILTER (WHERE t5>=t4) AS purchases, ROUND(100.0*(1.0 - COUNT(*) FILTER (WHERE t5>=t4)/NULLIF(COUNT(*) FILTER (WHERE t4>=t3),0)),2) AS payment_dropoff_pct, ROUND(100.0*COUNT(*) FILTER (WHERE t5>=t1)/NULLIF(COUNT(*) FILTER (WHERE t1 IS NOT NULL),0),2) AS overall_cvr_pct, ROUND(SUM(rev),2) AS revenue_usd FROM flags GROUP BY device_category ORDER BY revenue_usd DESC",
+      "interpretation": "Segmenting strict chronological GA4 sessions by device category isolates friction between checkout initiation and completed purchase, highlighting where UX/payment-flow remediation unlocks immediate incremental revenue."
+    },
+    {
+      "id": "top_regions_revenue",
+      "question": "What are the top regions by gross revenue, total orders, and active merchant count?",
+      "keywords": ["region", "macro", "revenue", "orders", "merchants", "top", "olist", "sales"],
+      "sql": "WITH daily_reg AS (SELECT macro_region, region_code, order_date, SUM(daily_orders) AS ord, SUM(gross_revenue) AS rev, MAX(cumulative_active_merchants) AS merch FROM v_regional_demand GROUP BY 1,2,3) SELECT macro_region, SUM(ord) AS total_orders, ROUND(SUM(rev),2) AS total_revenue, ROUND(SUM(rev)/NULLIF(SUM(ord),0),2) AS avg_order_value, MAX(merch) AS peak_state_merchants FROM daily_reg GROUP BY macro_region ORDER BY total_revenue DESC",
+      "interpretation": "Southeast dominates gross merchandise volume and active merchant liquidity, while higher-AOV emerging regions (Northeast and South) present strong marginal upside for targeted marketing expansion."
+    },
+    {
+      "id": "product_segment_performance",
+      "question": "Which product segment drives the highest revenue, unit volume, and promo discount share?",
+      "keywords": ["product", "segment", "category", "promo", "discount", "units", "freight"],
+      "sql": "SELECT product_segment, SUM(daily_orders) AS total_orders, SUM(units_sold) AS total_units, ROUND(SUM(gross_revenue),2) AS total_revenue, ROUND(SUM(freight_cost),2) AS total_freight_cost, ROUND(100.0*SUM(freight_cost)/NULLIF(SUM(gross_revenue),0),2) AS freight_to_rev_pct, ROUND(AVG(promo_discount_pct) FILTER (WHERE daily_orders>0),3) AS avg_promo_discount_pct FROM v_regional_demand GROUP BY product_segment ORDER BY total_revenue DESC",
+      "interpretation": "Ranking product segments by gross revenue alongside freight-to-revenue ratio and voucher utilization reveals which categories deliver both scale and healthy unit economics."
+    },
+    {
+      "id": "ab_experiment_summary",
+      "question": "Compare control vs treatment conversion rate, post-experiment revenue, and 30-day retention in the A/B test.",
+      "keywords": ["ab", "a/b", "experiment", "control", "treatment", "cuped", "retention", "lift"],
+      "sql": "SELECT experiment_group, COUNT(*) AS users, ROUND(AVG(pre_exp_spend),2) AS avg_pre_exp_spend, ROUND(100.0*AVG(converted),3) AS conversion_rate_pct, ROUND(AVG(post_exp_revenue),2) AS avg_post_exp_revenue, ROUND(100.0*AVG(retention_d7),2) AS d7_retention_pct, ROUND(100.0*AVG(retention_d30),2) AS d30_retention_pct FROM v_ab_logs GROUP BY experiment_group ORDER BY experiment_group",
+      "interpretation": "Balanced baseline pre-experiment spend across Control and Treatment confirms clean randomization, while Treatment lifts conversion, revenue per user, and 7-day/30-day retention."
+    },
+    {
+      "id": "ab_by_device_tier",
+      "question": "How does the A/B experiment treatment lift vary across device OS and region tier?",
+      "keywords": ["device_os", "tier", "ios", "android", "heterogeneous", "subgroup", "ab"],
+      "sql": "SELECT device_os, region_tier, ROUND(100.0*AVG(converted) FILTER (WHERE experiment_group='control'),3) AS ctrl_cvr_pct, ROUND(100.0*AVG(converted) FILTER (WHERE experiment_group='treatment'),3) AS treat_cvr_pct, ROUND(AVG(post_exp_revenue) FILTER (WHERE experiment_group='treatment') - AVG(post_exp_revenue) FILTER (WHERE experiment_group='control'),2) AS rev_lift_per_user FROM v_ab_logs GROUP BY device_os, region_tier ORDER BY rev_lift_per_user DESC",
+      "interpretation": "Subgroup slicing of the A/B test pinpoints which OS and region-tier cohorts capture the largest incremental revenue lift per exposed user."
+    },
+    {
+      "id": "ga4_traffic_sources",
+      "question": "Which GA4 traffic sources and mediums drive the highest purchase revenue and average order value?",
+      "keywords": ["traffic", "source", "medium", "channel", "acquisition", "marketing", "organic", "cpc"],
+      "sql": "SELECT traffic_source, traffic_medium, COUNT(DISTINCT ga_session_id) FILTER (WHERE event_name='session_start') AS sessions, COUNT(*) FILTER (WHERE event_name='purchase') AS purchases, ROUND(100.0*COUNT(*) FILTER (WHERE event_name='purchase')/NULLIF(COUNT(DISTINCT ga_session_id) FILTER (WHERE event_name='session_start'),0),2) AS session_cvr_pct, ROUND(SUM(event_value_in_usd) FILTER (WHERE event_name='purchase'),2) AS total_revenue_usd FROM v_ga4_events GROUP BY traffic_source, traffic_medium ORDER BY total_revenue_usd DESC LIMIT 10",
+      "interpretation": "Channel attribution connects acquisition cost centers directly to downstream purchases and session-level conversion efficiency."
+    },
+    {
+      "id": "ga4_geo_revenue",
+      "question": "Which GA4 geographic regions generate the most ecommerce revenue and purchases?",
+      "keywords": ["geo", "california", "new york", "texas", "england", "karnataka", "geography", "state"],
+      "sql": "SELECT geo_region, COUNT(DISTINCT ga_session_id) FILTER (WHERE event_name='session_start') AS sessions, COUNT(*) FILTER (WHERE event_name='add_to_cart') AS add_to_carts, COUNT(*) FILTER (WHERE event_name='purchase') AS purchases, ROUND(SUM(event_value_in_usd) FILTER (WHERE event_name='purchase'),2) AS revenue_usd, ROUND(SUM(event_value_in_usd) FILTER (WHERE event_name='purchase')/NULLIF(COUNT(*) FILTER (WHERE event_name='purchase'),0),2) AS aov_usd FROM v_ga4_events GROUP BY geo_region ORDER BY revenue_usd DESC",
+      "interpretation": "Evaluating regional GA4 funnel throughput distinguishes high-volume markets from high-AOV pockets requiring localized checkout optimization."
+    },
+    {
+      "id": "mql_funnel_conversion",
+      "question": "What is the B2B merchant MQL conversion rate and median days to close by lead origin?",
+      "keywords": ["mql", "lead", "b2b", "closed", "deal", "won", "origin", "days_to_close", "onboarding"],
+      "sql": "SELECT lead_origin, COUNT(*) AS total_mqls, COUNT(*) FILTER (WHERE is_won) AS won_deals, ROUND(100.0*COUNT(*) FILTER (WHERE is_won)/NULLIF(COUNT(*),0),2) AS win_rate_pct, ROUND(AVG(days_to_close) FILTER (WHERE is_won),1) AS avg_days_to_close, ROUND(MEDIAN(days_to_close) FILTER (WHERE is_won),1) AS median_days_to_close FROM v_mql_funnel GROUP BY lead_origin HAVING COUNT(*) >= 50 ORDER BY win_rate_pct DESC",
+      "interpretation": "Tracking merchant acquisition MQL win rates and closing velocity by lead origin identifies high-intent inbound channels that accelerate Bass Diffusion network growth."
+    },
+    {
+      "id": "monthly_demand_trend",
+      "question": "Show monthly gross revenue, order volume, and active merchant growth over time.",
+      "keywords": ["monthly", "trend", "time", "growth", "forecast", "seasonality", "month"],
+      "sql": "WITH monthly_state AS (SELECT DATE_TRUNC('month', order_date)::DATE AS month_start, region_code, SUM(daily_orders) AS ord, SUM(gross_revenue) AS rev, MAX(cumulative_active_merchants) AS merch FROM v_regional_demand GROUP BY 1,2) SELECT month_start, SUM(ord) AS monthly_orders, ROUND(SUM(rev),2) AS monthly_revenue, SUM(merch) AS active_merchants FROM monthly_state GROUP BY month_start ORDER BY month_start ASC",
+      "interpretation": "Monthly aggregation reveals structural seasonal peaks (such as Q4 holiday surges) and steady compounding growth in active merchant liquidity across the marketplace."
+    },
+    {
+      "id": "rfm_vip_summary",
+      "question": "What share of GA4 revenue comes from the top spend quartile of buyers (RFM NTILE 4)?",
+      "keywords": ["rfm", "quartile", "ntile", "vip", "repeat", "buyer", "customer", "whale"],
+      "sql": "WITH buyers AS (SELECT user_pseudo_id, COUNT(DISTINCT ga_session_id) AS orders, SUM(COALESCE(event_value_in_usd,0)) AS spend FROM v_ga4_events WHERE event_name='purchase' GROUP BY user_pseudo_id), q AS (SELECT *, NTILE(4) OVER (ORDER BY spend DESC) AS quartile FROM buyers) SELECT quartile, COUNT(*) AS buyers, ROUND(AVG(orders),2) AS avg_orders, ROUND(SUM(spend),2) AS quartile_revenue_usd, ROUND(100.0*SUM(spend)/SUM(SUM(spend)) OVER (),2) AS revenue_share_pct FROM q GROUP BY quartile ORDER BY quartile ASC",
+      "interpretation": "Pareto concentration across NTILE(4) buyer quartiles quantifies how much purchase revenue depends on top-tier VIP cohorts versus one-time shoppers."
+    }
+  ],
+  "memo_fallback_sections": {
+    "disclaimer": "Generated using deterministic analytical template + live DuckDB/SciPy/Prophet model metrics (no external LLM API key required)."
+  }
+}
