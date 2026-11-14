@@ -199,12 +199,12 @@
 
 ## Phase 6: Module 5 — Resilient GenAI Automation & Multi-Tab Excel Engine
 
-- [ ] **6.1 Implement Read-Only SQL AST/Regex Sanitizer (`src/genai/sql_validator.py`)**
+- [x] **6.1 Implement Read-Only SQL AST/Regex Sanitizer (`src/genai/sql_validator.py`)**
   - Validate any natural-language-generated SQL query before execution:
     - Must begin with `SELECT` or `WITH`.
     - Must reject any statement containing multiple semicolons or forbidden keywords (`DROP`, `ALTER`, `TRUNCATE`, `INSERT`, `UPDATE`, `DELETE`, `CREATE`, `REPLACE`, `COPY`, `ATTACH`, `DETACH`, `INSTALL`, `LOAD`, `PRAGMA`, `CALL`, `EXPORT`).
 
-- [ ] **6.2 Implement Multi-Provider GenAI Assistant with Offline Fallback (`src/genai/assistant.py`)**
+- [x] **6.2 Implement Multi-Provider GenAI Assistant with Offline Fallback (`src/genai/assistant.py`)**
   - Implement `GenAIAssistant` supporting:
     1. **Groq Cloud API** (`llama-3.3-70b-versatile`) via `httpx` with $10\text{ s}$ timeout.
     2. **Google Gemini API** (`gemini-2.5-flash`) automatic failover.
@@ -213,7 +213,7 @@
     - `ask_analytics_sql(user_question)` $\rightarrow$ Generates DuckDB SQL $\rightarrow$ Validates via `sql_validator.py` $\rightarrow$ Executes on DuckDB $\rightarrow$ Returns SQL, DataFrame, and executive interpretation.
     - `generate_executive_memo(kpi_payload)` $\rightarrow$ Produces a structured C-Suite Board Memo in Markdown.
 
-- [ ] **6.3 Implement Automated Multi-Tab Excel Workbook Generator (`src/reporting/excel_generator.py`)**
+- [x] **6.3 Implement Automated Multi-Tab Excel Workbook Generator (`src/reporting/excel_generator.py`)**
   - Use `OpenPyXL` to dynamically build an in-memory `BytesIO` `.xlsx` workbook with corporate styling, number formatting, and **live Excel formulas**:
     - **Tab 1 (`Executive_Summary`):** Cross-sheet formula links (`=GA4_Funnel_Economics!E8`, `=AB_Test_Model!D10`, `=Prescriptive_Allocation!F12`).
     - **Tab 2 (`GA4_Funnel_Economics`):** Step conversion formulas (`=C6/C5`), drop-off rate (`=1-D6`), and revenue-at-risk sensitivity formula.
@@ -221,38 +221,38 @@
     - **Tab 4 (`Forecast_And_SCurve`):** Regional forecast series, live Bass Diffusion formula column, and an embedded `OpenPyXL` `LineChart`.
     - **Tab 5 (`Prescriptive_Allocation`):** Baseline vs. Optimal budget/inventory table with `SUM` totals and `% Variance` formulas (`=(D5-C5)/C5`).
 
-- [ ] **6.4 Write Unit Tests (`tests/test_genai_and_excel.py`)**
+- [x] **6.4 Write Unit Tests (`tests/test_genai_and_excel.py`)**
   - Verify `sql_validator.py` blocks `DROP TABLE v_ga4_events;` and `SELECT * FROM v_ga4_events; COPY ...` while allowing multi-CTE `WITH ... SELECT` queries.
   - Verify `GenAIAssistant` seamlessly returns cached output when API keys are unset.
   - Verify `excel_generator.py` produces a valid `.xlsx` stream containing all 5 worksheet names and formula strings starting with `'='`.
 
-- [ ] **6.5 Phase 6 Verification Gate**
+- [x] **6.5 Phase 6 Verification Gate**
   - Run `pytest tests/test_genai_and_excel.py -v` and confirm $100\%$ pass rate.
 
 ---
 
 ## Phase 7: Unified Executive Streamlit Application (`app/`)
 
-- [ ] **7.1 Build Main Executive App Shell & Sidebar (`app/main.py`)**
+- [x] **7.1 Build Main Executive App Shell & Sidebar (`app/main.py`)**
   - Configure page title (`OmniGrowth-AI | Full-Stack Product Growth & Prescriptive Analytics`), global filters (Region, Date Range, Product Segment), and a **"Data Lineage, Architecture & VPS Memory Monitor"** sidebar badge displaying current process RSS memory in MB (`psutil` / `/proc/self/statm`).
 
-- [ ] **7.2 Build Tab 1: GA4 User Journey, Advanced SQL Lab & Looker Studio View (`app/components/tab_sql_ga4.py`)**
+- [x] **7.2 Build Tab 1: GA4 User Journey, Advanced SQL Lab & Looker Studio View (`app/components/tab_sql_ga4.py`)**
   - Render interactive Plotly Funnel chart, segment drop-off heatmap, cohort retention matrix, an expandable **"SQL Lab & Live Query Inspector"** drawer (displaying and executing the CTE + Window Function SQL), and an embedded **Google Looker Studio** executive view toggle.
 
-- [ ] **7.3 Build Tab 2: Dual-Paradigm A/B Testing & Experimentation Lab (`app/components/tab_ab_testing.py`)**
+- [x] **7.3 Build Tab 2: Dual-Paradigm A/B Testing & Experimentation Lab (`app/components/tab_ab_testing.py`)**
   - Render side-by-side **Frequentist (Standard vs. CUPED Variance Reduction + O'Brien-Fleming Sequential Boundary)** and **Analytical Bayesian (Posterior Distributions, $P(\text{Treatment} > \text{Control})$, Expected Loss, and $ROPE$)** interactive dashboards plus an interactive Sample Size / MDE Power Calculator.
 
-- [ ] **7.4 Build Tab 3: Time-Series (`Prophet` vs. `AutoARIMA`) & S-Curve Scenario Planner (`app/components/tab_forecasting.py`)**
+- [x] **7.4 Build Tab 3: Time-Series (`Prophet` vs. `AutoARIMA`) & S-Curve Scenario Planner (`app/components/tab_forecasting.py`)**
   - Render regional forecast comparisons with $80\% / 95\%$ confidence ribbons, rolling backtest accuracy table ($MAPE$, $RMSE$, $sMAPE$), and **Bass Diffusion vs. Logistic S-Curve** plots marking the exact inflection point $t^*$ and carrying capacity $M$.
   - Connect interactive executive sliders (*Marketing Spend % Change*, *Promo Discount %*, *Onboarding Lift %*) for real-time what-if simulation.
 
-- [ ] **7.5 Build Tab 4: Prescriptive Supply Chain & Marketing Optimizer (`app/components/tab_optimization.py`)**
+- [x] **7.5 Build Tab 4: Prescriptive Supply Chain & Marketing Optimizer (`app/components/tab_optimization.py`)**
   - Allow executives to set Total Marketing Budget ($B_{\text{total}}$) and Total Warehouse Inventory ($I_{\text{warehouse}}$), run the `SciPy` SLSQP optimizer live, and visualize the optimal regional reallocation waterfall and stockout risk reduction.
 
-- [ ] **7.6 Build Tab 5: GenAI Workflow Automation & One-Click Excel Workbook (`app/components/tab_genai_excel.py`)**
+- [x] **7.6 Build Tab 5: GenAI Workflow Automation & One-Click Excel Workbook (`app/components/tab_genai_excel.py`)**
   - Render the **Natural-Language-to-DuckDB SQL Agent** chat interface, the **One-Click C-Suite Board Memo Generator**, and the **Download 5-Tab Executive Financial Model (`.xlsx`)** button.
 
-- [ ] **7.7 Phase 7 Verification Gate**
+- [x] **7.7 Phase 7 Verification Gate**
   - Run full test suite: `pytest tests/ -v` ($100\%$ pass rate) and `ruff check src/ app/ tests/`.
   - Launch app locally (`streamlit run app/main.py`) and verify RSS memory consumption stays $< 250\text{ MB}$.
 
@@ -260,11 +260,11 @@
 
 ## Phase 8: Co-Existing VPS Deployment ($1\text{ vCPU} / 2\text{ GB RAM}$) & Cloud Backup
 
-- [ ] **8.1 Create `systemd` Cgroup-Isolated Service (`deploy/omnigrowth.service`)**
+- [x] **8.1 Create `systemd` Cgroup-Isolated Service (`deploy/omnigrowth.service`)**
   - Configure `MemoryHigh=280M`, `MemoryMax=350M`, and `CPUQuota=50%` binding Streamlit to `127.0.0.1:8501` so existing VPS applications are completely protected.
 
-- [ ] **8.2 Create Nginx Reverse Proxy Config (`deploy/nginx_omnigrowth.conf`)**
+- [x] **8.2 Create Nginx Reverse Proxy Config (`deploy/nginx_omnigrowth.conf`)**
   - Configure virtual host for `omnigrowth.<vps-ip>.sslip.io` (or custom subdomain) with WebSocket upgrade headers and Let's Encrypt TLS (`certbot --nginx`).
 
-- [ ] **8.3 Polish Portfolio `README.md` & Deploy Live**
+- [x] **8.3 Polish Portfolio `README.md` & Deploy Live**
   - Document architecture diagrams, live VPS URL, Streamlit Community Cloud backup URL, Looker Studio link, and mathematical methodology in `README.md`.

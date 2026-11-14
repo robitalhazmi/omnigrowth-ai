@@ -1,0 +1,36 @@
+[Unit]
+Description=OmniGrowth-AI Streamlit Prescriptive Analytics App
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/omnigrowth-ai
+Environment="PATH=/var/www/omnigrowth-ai/.venv/bin:/usr/local/bin:/usr/bin:/bin"
+Environment="OMP_NUM_THREADS=1"
+Environment="OPENBLAS_NUM_THREADS=1"
+Environment="MKL_NUM_THREADS=1"
+Environment="NUMEXPR_NUM_THREADS=1"
+EnvironmentFile=-/var/www/omnigrowth-ai/.env
+ExecStart=/var/www/omnigrowth-ai/.venv/bin/streamlit run app/main.py \
+    --server.port=8501 \
+    --server.address=127.0.0.1 \
+    --server.headless=true \
+    --server.enableCORS=false \
+    --server.enableXsrfProtection=true \
+    --browser.gatherUsageStats=false
+Restart=on-failure
+RestartSec=5
+
+# cgroups v2 memory & CPU isolation for co-existing on 2 GB RAM / 1 vCPU VPS
+MemoryHigh=280M
+MemoryMax=350M
+CPUQuota=50%
+
+# Hardening
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

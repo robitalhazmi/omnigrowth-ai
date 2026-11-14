@@ -131,3 +131,46 @@ make lint
 ## Contributing
 
 Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our branch workflow, Conventional Commits standard, and pull request requirements, or open an issue via our [GitHub Issue Forms](https://github.com/robitalhazmi/omnigrowth-ai/issues/new/choose).
+
+
+## Mathematical & Statistical Methodology
+
+| Module | Technique | Mathematical / Algorithmic Formulation | Implementation |
+| :--- | :--- | :--- | :--- |
+| **1. SQL & GA4 Funnel** | Multi-Stage CTEs & Window Analytics | Chronological `session_start` -> `purchase` tracking (`ROW_NUMBER`, `LAG`, `LEAD`, `NTILE`), cohort retention, DuckDB zero-copy Parquet views (`192MB`, `1` thread) | [`sql_queries.py`](src/analytics/sql_queries.py), [`ga4_funnel.py`](src/analytics/ga4_funnel.py) |
+| **2. Experimentation** | CUPED, Sequential & Bayesian | $\hat{Y}_i^{\text{CUPED}} = Y_i - \theta(X_i - \bar{X})$, Lan-DeMets O'Brien-Fleming boundaries $\alpha(t_k) = 2 - 2\Phi(Z_{1-\alpha/2}/\sqrt{t_k})$, conjugate Beta-Binomial & Normal-Inverse-Gamma Expected Loss & ROPE | [`frequentist_ab.py`](src/experimentation/frequentist_ab.py), [`sequential_testing.py`](src/experimentation/sequential_testing.py), [`bayesian_ab.py`](src/experimentation/bayesian_ab.py) |
+| **3. Forecasting & Diffusion** | Prophet, AutoARIMA & Bass S-Curve | Offline rolling-origin CV artifacts in `data/processed/`; online analytical shocks (`< 50 ms`) & Bass diffusion $N(t) = M\frac{1 - e^{-(p+q)t}}{1 + (q/p)e^{-(p+q)t}}$, $t^* = \frac{\ln(q/p)}{p+q}$ | [`time_series.py`](src/forecasting/time_series.py), [`s_curve.py`](src/forecasting/s_curve.py) |
+| **4. Prescriptive Solver** | Constrained SLSQP Optimization | Joint marketing budget $b_r$ & regional inventory $I_r$ solver maximizing net margin net of holding ($c_{\text{hold}}$) & 95th-pctl stockout penalties ($c_{\text{short}}$) subject to 80% safety-stock floors | [`prescriptive_solver.py`](src/optimization/prescriptive_solver.py) |
+| **5. GenAI & Excel Engine** | Failover NL-to-SQL & Live Formulas | Groq (`10s` timeout + exponential backoff) -> Gemini -> offline cache (`data/fallback/genai_cache.json`); read-only AST/regex SQL validator; 5-tab formula `.xlsx` workbook | [`assistant.py`](src/genai/assistant.py), [`sql_validator.py`](src/genai/sql_validator.py), [`excel_generator.py`](src/reporting/excel_generator.py) |
+
+## Google Looker Studio & Cloud Backup Architecture
+
+- **LookML Semantic Layer:** Defined in [`ga4_funnel.view.lkml`](looker/ga4_funnel.view.lkml) alongside the refreshed summary extract [`looker_executive_mart.csv`](data/processed/looker_executive_mart.csv).
+- **Live BI Embed:** Configure `LOOKER_STUDIO_EMBED_URL` in `.env` to render your Looker Studio dashboard directly inside Tab 1 (`SQL Funnel & Looker BI`).
+- **Cloud Storage Offload:** Large raw CSV inputs stay outside the VPS runtime footprint; sync compressed Parquet marts (`data/processed/*.parquet`) and fallback snapshots to private object storage (e.g., Cloudflare R2 / S3 / Google Drive) for reproducible zero-downtime VPS provisioning.
+
+## Production VPS Deployment (Co-Existing 1 vCPU / 2 GB RAM)
+
+OmniGrowth-AI ships ready for co-located deployment on a shared Ubuntu 24.04 VPS alongside existing services while strictly isolating CPU and RSS memory under **300 MB**:
+
+1. **Provision & Train Artifacts:**
+   ```bash
+   python3 -m venv .venv && source .venv/bin/activate
+   pip install -r requirements.txt
+   python scripts/prepare_data.py
+   python scripts/train_forecasts.py
+   ```
+2. **Install Cgroup-Capped `systemd` Service ([`omnigrowth.service`](deploy/omnigrowth.service)):**
+   ```bash
+   sudo cp deploy/omnigrowth.service /etc/systemd/system/omnigrowth.service
+   sudo systemctl daemon-reload && sudo systemctl enable --now omnigrowth
+   sudo systemctl status omnigrowth
+   ```
+   Enforces `MemoryHigh=280M`, `MemoryMax=350M`, `CPUQuota=50%`, `OMP_NUM_THREADS=1`, and binds headless Streamlit to `127.0.0.1:8501`.
+3. **Configure Nginx WebSocket Proxy ([`nginx_omnigrowth.conf`](deploy/nginx_omnigrowth.conf)) & TLS:**
+   ```bash
+   sudo cp deploy/nginx_omnigrowth.conf /etc/nginx/sites-available/omnigrowth
+   sudo ln -s /etc/nginx/sites-available/omnigrowth /etc/nginx/sites-enabled/omnigrowth
+   sudo nginx -t && sudo systemctl reload nginx
+   sudo certbot --nginx -d omnigrowth.yourdomain.com
+   ```
