@@ -2,7 +2,7 @@
 
 **Domain Scope:** Omnichannel Retail, D2C Digital Product Growth & Supply Chain Analytics  
 **Development Environment:** Antigravity IDE on Local Laptop (Ubuntu 24.04.2 LTS, 16.0 GiB RAM, AMD Ryzen 5 PRO 3500U $\times 8$ threads)  
-**Production Hosting:** Co-existing Shared VPS (Ubuntu 24.04 x86_64, 1 vCPU / 2 GB RAM via `systemd` cgroup memory cap + Nginx) & Streamlit Community Cloud Backup  
+**Production Hosting:** Co-existing Shared VPS (Ubuntu 24.04 x86_64, 1 vCPU / 2 GB RAM via Coolify Docker + Traefik with `350M` / `0.50` vCPU caps) & Streamlit Community Cloud Backup  
 **Source Control:** GitHub (`main` production branch + feature branches)
 
 ---
@@ -207,7 +207,10 @@ omnigrowth-ai/
 ├── walkthrough_guide.md              # End-to-end build, deploy & architecture walkthrough guide
 ├── README.md                         # Executive portfolio showcase & badges
 ├── pyproject.toml                    # Dependencies & pytest/ruff configuration
-├── requirements.txt                  # Pinned lightweight production dependencies
+├── requirements.txt                  # Full local development & offline training dependencies
+├── requirements-serve.txt            # Slim serving dependencies for Coolify Docker build
+├── Dockerfile                        # Non-root python:3.12-slim serving container (port 8501)
+├── .dockerignore                     # Keeps container context compact (excludes raw data & dev files)
 ├── .env.example                      # Template for GROQ_API_KEY & GEMINI_API_KEY
 ├── Makefile                          # Shortcuts: make data, make train, make test, make run
 ├── data/
@@ -254,8 +257,9 @@ omnigrowth-ai/
 │       ├── tab_optimization.py       # Tab 4: Prescriptive Supply Chain & Budget Solver
 │       └── tab_genai_excel.py        # Tab 5: NL-to-SQL Agent, Executive Memo & Excel Export
 ├── deploy/
-│   ├── omnigrowth.service            # systemd unit with MemoryMax=350M & CPUQuota=50%
-│   └── nginx_omnigrowth.conf         # Nginx reverse proxy config with WebSocket support
+│   ├── docker-compose.coolify.yml    # Coolify Compose template (mem_limit: 350m, cpus: 0.50)
+│   ├── omnigrowth.service            # Optional bare-metal systemd fallback (MemoryMax=350M)
+│   └── nginx_omnigrowth.conf         # Optional bare-metal Nginx WebSocket fallback
 └── tests/
     ├── test_duckdb_queries.py        # Validates CTE & window function SQL execution
     ├── test_experimentation.py       # Validates CUPED variance reduction & Bayesian posteriors
@@ -266,15 +270,18 @@ omnigrowth-ai/
 
 ---
 
-## 7. Co-Existing VPS Deployment Specification (1 vCPU / 2 GB RAM)
+## 7. Co-Existing VPS Deployment Specification (1 vCPU / 2 GB RAM via Coolify)
 
-Because your Ubuntu 24.04 VPS already hosts other live web applications, we avoid Docker daemon overhead and deploy directly via an isolated Python virtual environment (`venv`) managed by `systemd` resource control (`cgroups v2`):
+Because **Coolify** (Docker + Traefik reverse proxy) already runs on your Ubuntu 24.04 VPS alongside other live web applications, we deploy **OmniGrowth-AI** as a slim serving container with strict Docker resource limits (`350M` RAM / `0.50` vCPU) and let Coolify's Traefik proxy terminate TLS and route WebSockets:
 
-* **Memory & CPU Isolation (`deploy/omnigrowth.service`):**
-  * `MemoryHigh=280M` (throttles cache smoothly if approached)
-  * `MemoryMax=350M` (strict hard ceiling so existing VPS workloads are never starved)
-  * `CPUQuota=50%` (prevents a single analytical query from spiking 100% of your 1 vCPU)
-* **Streamlit Runtime Flags:**
-  * `--server.headless=true --server.address=127.0.0.1 --server.port=8501 --server.maxUploadSize=5 --browser.gatherUsageStats=false`
-* **Nginx Reverse Proxy (`deploy/nginx_omnigrowth.conf`):**
-  * Proxies traffic from a dedicated subdomain (e.g., `omnigrowth.<your-vps-ip>.sslip.io` or your custom domain) to `127.0.0.1:8501` with WebSocket upgrade headers (`Upgrade $http_upgrade`, `Connection "upgrade"`) and free Let's Encrypt TLS via `certbot --nginx`.
+* **Slim Container Build (`Dockerfile` + `requirements-serve.txt` + `.dockerignore`):**
+  * Excludes heavy offline model-training packages (`Prophet`, `CmdStan`, `AutoARIMA`, `statsmodels`, `scikit-learn`) so Coolify builds cleanly in $< 60\text{ s}$ on a 2 GB VPS without OOM spikes, serving pre-computed `.parquet` artifacts committed in `data/processed/`.
+  * Sets `OMP_NUM_THREADS=1`, `OPENBLAS_NUM_THREADS=1`, `MKL_NUM_THREADS=1`, `NUMEXPR_NUM_THREADS=1`, `MALLOC_TRIM_THRESHOLD_=65536`, `DUCKDB_MEMORY_LIMIT=192MB`, and `DUCKDB_THREADS=1`.
+* **Container Resource Isolation (Coolify UI or `deploy/docker-compose.coolify.yml`):**
+  * `mem_reservation` (`256M`): Keeps live container RSS well within budget.
+  * `mem_limit` (`350M`): Strict hard ceiling so existing VPS workloads are never starved.
+  * `cpus` (`0.50`): Prevents analytical queries from saturating the shared 1 vCPU.
+* **Streamlit Runtime Flags & Traefik Proxy:**
+  * `--server.headless=true --server.address=0.0.0.0 --server.port=8501 --server.fileWatcherType=none --server.maxUploadSize=5 --browser.gatherUsageStats=false`
+  * Coolify exposes port `8501` internally (`HEALTHCHECK` on `/_stcore/health`) and uses Traefik to proxy your domain (`https://omnigrowth.yourdomain.com`) with automatic Let's Encrypt TLS and `/_stcore/stream` WebSockets.
+  * *(Optional non-Coolify bare-metal templates `deploy/omnigrowth.service` and `deploy/nginx_omnigrowth.conf` remain in `deploy/` as reference.)*

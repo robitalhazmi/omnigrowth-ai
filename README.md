@@ -149,28 +149,21 @@ Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for de
 - **Live BI Embed:** Configure `LOOKER_STUDIO_EMBED_URL` in `.env` to render your Looker Studio dashboard directly inside Tab 1 (`SQL Funnel & Looker BI`).
 - **Cloud Storage Offload:** Large raw CSV inputs stay outside the VPS runtime footprint; sync compressed Parquet marts (`data/processed/*.parquet`) and fallback snapshots to private object storage (e.g., Cloudflare R2 / S3 / Google Drive) for reproducible zero-downtime VPS provisioning.
 
-## Production VPS Deployment (Co-Existing 1 vCPU / 2 GB RAM)
+## Production VPS Deployment (Co-Existing 1 vCPU / 2 GB RAM via Coolify)
 
-OmniGrowth-AI ships ready for co-located deployment on a shared Ubuntu 24.04 VPS alongside existing services while strictly isolating CPU and RSS memory under **300 MB**:
+OmniGrowth-AI ships ready for container deployment on **Coolify** alongside existing VPS services while strictly capping CPU and RSS memory:
 
-1. **Provision & Train Artifacts:**
+1. **Pre-Compute Serving Artifacts Locally (already committed in `data/processed/`):**
    ```bash
    python3 -m venv .venv && source .venv/bin/activate
    pip install -r requirements.txt
-   python scripts/prepare_data.py
+   python scripts/download_datasets.py && python scripts/build_data_mart.py
    python scripts/train_forecasts.py
    ```
-2. **Install Cgroup-Capped `systemd` Service ([`omnigrowth.service`](deploy/omnigrowth.service)):**
-   ```bash
-   sudo cp deploy/omnigrowth.service /etc/systemd/system/omnigrowth.service
-   sudo systemctl daemon-reload && sudo systemctl enable --now omnigrowth
-   sudo systemctl status omnigrowth
-   ```
-   Enforces `MemoryHigh=280M`, `MemoryMax=350M`, `CPUQuota=50%`, `OMP_NUM_THREADS=1`, and binds headless Streamlit to `127.0.0.1:8501`.
-3. **Configure Nginx WebSocket Proxy ([`nginx_omnigrowth.conf`](deploy/nginx_omnigrowth.conf)) & TLS:**
-   ```bash
-   sudo cp deploy/nginx_omnigrowth.conf /etc/nginx/sites-available/omnigrowth
-   sudo ln -s /etc/nginx/sites-available/omnigrowth /etc/nginx/sites-enabled/omnigrowth
-   sudo nginx -t && sudo systemctl reload nginx
-   sudo certbot --nginx -d omnigrowth.yourdomain.com
-   ```
+2. **Deploy via Coolify ([`Dockerfile`](Dockerfile) + [`requirements-serve.txt`](requirements-serve.txt)):**
+   - **Build Pack:** `Dockerfile` *(skips heavy `Prophet` / `CmdStan` compilation on the 2 GB VPS)* — or `Docker Compose` via [`deploy/docker-compose.coolify.yml`](deploy/docker-compose.coolify.yml).
+   - **Port Exposes:** `8501` (`HEALTHCHECK` on `/_stcore/health`; Traefik handles Let's Encrypt TLS & `/_stcore/stream` WebSockets automatically).
+   - **Environment Variables:** `GROQ_API_KEY`, `GEMINI_API_KEY`, `LOOKER_STUDIO_EMBED_URL`, `DUCKDB_MEMORY_LIMIT=192MB`, `DUCKDB_THREADS=1`.
+   - **Resource Limits:** Memory Limit `350M`, Memory Reservation `256M`, CPU Limit `0.5`.
+3. **Bare-Metal Fallback (Optional without Coolify):**
+   - Reference templates [`deploy/omnigrowth.service`](deploy/omnigrowth.service) and [`deploy/nginx_omnigrowth.conf`](deploy/nginx_omnigrowth.conf) remain available in `deploy/`.
