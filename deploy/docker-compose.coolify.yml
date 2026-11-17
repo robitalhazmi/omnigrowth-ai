@@ -1,0 +1,24 @@
+# Optional Docker Compose template for Coolify (Docker Compose build pack).
+# If using Coolify's default "Dockerfile" build pack, Coolify manages Traefik routing,
+# HTTPS certificates, and Resource Limits directly via the Coolify dashboard.
+
+services:
+  omnigrowth:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    expose:
+      - "8501"
+    environment:
+      - GROQ_API_KEY=${GROQ_API_KEY:-}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - LOOKER_STUDIO_EMBED_URL=${LOOKER_STUDIO_EMBED_URL:-}
+      - DUCKDB_MEMORY_LIMIT=192MB
+      - DUCKDB_THREADS=1
+      - OMP_NUM_THREADS=1
+      - OPENBLAS_NUM_THREADS=1
+      - MKL_NUM_THREADS=1
+    mem_limit: 350m
+    mem_reservation: 256m
+    cpus: 0.50
+    restart: unless-stopped

@@ -35,5 +35,6 @@ data/fallback/*
 .vscode/
 *.swp
 
-# --- DuckDB spill directory ---
+# --- DuckDB spill directory & Office locks ---
 data/.duckdb_tmp/
+.~lock.*

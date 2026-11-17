@@ -28,7 +28,7 @@ Open `~/projects/omnigrowth-ai` in **Antigravity IDE**. Instead of asking the AI
 > *"Read `AGENTS.md` and `task_checklist.md`. Execute **Phase 4** (`src/forecasting/s_curve.py` fitting Logistic and Bass Diffusion models $p, q, M$; `src/forecasting/time_series.py` with Prophet and AutoARIMA; and `scripts/train_forecasts.py` to generate pre-computed artifacts in `data/processed/`) and **Phase 5** (`src/optimization/prescriptive_solver.py` using `scipy.optimize.minimize` SLSQP for regional budget and inventory allocation). Run `python scripts/train_forecasts.py` and `pytest tests/test_forecasting_scurve.py tests/test_prescriptive_solver.py -v` until 100% pass."*
 
 ### Prompt 4 (Phases 6, 7 & 8 — GenAI Guardrails, Live Excel Engine, Streamlit UI & Deployment Configs)
-> *"Read `AGENTS.md` and `task_checklist.md`. Execute **Phase 6** (`src/genai/sql_validator.py`, `src/genai/assistant.py` with Groq/Gemini + deterministic cache `data/fallback/genai_cache.json`, and `src/reporting/excel_generator.py` building a 5-tab `.xlsx` workbook with live Excel formulas), **Phase 7** (the complete 5-tab Streamlit application in `app/`), and **Phase 8** (`deploy/omnigrowth.service`, `deploy/nginx_omnigrowth.conf`, and `README.md`). Run `pytest tests/ -v` and `ruff check .` to verify zero errors."*
+> *"Read `AGENTS.md` and `task_checklist.md`. Execute **Phase 6** (`src/genai/sql_validator.py`, `src/genai/assistant.py` with Groq/Gemini + deterministic cache `data/fallback/genai_cache.json`, and `src/reporting/excel_generator.py` building a 5-tab `.xlsx` workbook with live Excel formulas), **Phase 7** (the complete 5-tab Streamlit application in `app/`), and **Phase 8** (`Dockerfile`, `.dockerignore`, `requirements-serve.txt`, `deploy/docker-compose.coolify.yml`, optional `deploy/` bare-metal templates, and `README.md`). Run `pytest tests/ -v` and `ruff check .` to verify zero errors."*
 
 ---
 
@@ -60,12 +60,12 @@ Pairing the repository's LookML semantic definitions (`looker/*.lkml`) with a li
 
 ---
 
-## 4. Safe Co-Existing Deployment on Your Shared $1\text{ vCPU} / 2\text{ GB RAM}$ Ubuntu 24.04 VPS
+## 4. Safe Co-Existing Deployment on Your Shared $1\text{ vCPU} / 2\text{ GB RAM}$ Ubuntu 24.04 VPS (via Coolify)
 
-Because your VPS already runs other web applications, we deploy **OmniGrowth-AI** using native Linux `cgroups v2` resource isolation inside `systemd` (no heavy Docker daemon overhead, and all heavy model training artifacts are already pre-computed in `data/processed/*.parquet`).
+Because **Coolify** (Docker + Traefik reverse proxy) is already managing applications and TLS on your VPS, we deploy **OmniGrowth-AI** directly through Coolify using a **slim serving container** (`Dockerfile` + `requirements-serve.txt`) with strict container memory/CPU limits (`350M` RAM / `0.50` vCPU). Avoid running a separate bare-metal `nginx` or `certbot` on ports 80/443 so nothing conflicts with Coolify's Traefik proxy.
 
 ### Step 4.1: Ensure Your 2 GB VPS Has a 2 GB Swap File (Safety Buffer)
-SSH into your VPS and verify swap is active so background OS bursts never trigger OOM kills:
+SSH into your VPS and verify swap is active so Docker builds in Coolify and background OS bursts never trigger OOM kills:
 ```bash
 free -h
 # If Swap is 0B, create a 2GB swapfile:
@@ -76,105 +76,35 @@ sudo swapon /swapfile
 echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
 ```
 
-### Step 4.2: Clone Repository & Install Lightweight Runtime on VPS
-Note that on the VPS, because `Prophet` and `AutoARIMA` forecasts are pre-computed on your 16 GB laptop and committed as compact `.parquet` artifacts ($< 25\text{ MB}$), the VPS only needs fast analytical serving packages:
+### Step 4.2: Why Coolify Uses `Dockerfile` + `requirements-serve.txt` (No Build OOM)
+- Full training libraries (`Prophet`, `CmdStan`, `AutoARIMA`, `statsmodels`, `scikit-learn`) are listed in `requirements.txt` for **local offline training only**. Pre-computed forecasts and S-curve artifacts (`< 25 MB`) are already committed in `data/processed/`.
+- The root [`Dockerfile`](Dockerfile) installs only [`requirements-serve.txt`](requirements-serve.txt) (`duckdb`, `pandas`, `numpy`, `scipy`, `openpyxl`, `plotly`, `streamlit`, `httpx`, `python-dotenv`), enforces `OMP_NUM_THREADS=1` / `OPENBLAS_NUM_THREADS=1` / `DUCKDB_MEMORY_LIMIT=192MB` / `DUCKDB_THREADS=1`, exposes port `8501`, and binds Streamlit to `0.0.0.0:8501` so Coolify's Traefik proxy can reach it over the Docker bridge network.
+
+### Step 4.3: Deploy OmniGrowth-AI in the Coolify Dashboard
+1. Push your latest `main` branch (including `Dockerfile`, `.dockerignore`, `requirements-serve.txt`, and `data/processed/*`) to GitHub.
+2. Open **Coolify $\rightarrow$ Projects $\rightarrow$ + New Resource $\rightarrow$ Public / Private Git Repository** and select `omnigrowth-ai` (`Branch: main`).
+3. Under **Configuration $\rightarrow$ General**:
+   - **Build Pack:** `Dockerfile` *(or `Docker Compose` pointing to `deploy/docker-compose.coolify.yml`)*
+   - **Port Exposes:** `8501`
+   - **Domains:** Set your domain or wildcard DNS (e.g., `https://omnigrowth.yourdomain.com` or `https://omnigrowth.<YOUR-VPS-IP>.sslip.io`). Coolify's Traefik automatically provisions Let's Encrypt HTTPS and proxies Streamlit WebSockets (`/_stcore/stream`).
+4. Under **Configuration $\rightarrow$ Environment Variables**, add:
+   - `GROQ_API_KEY` (optional, free tier)
+   - `GEMINI_API_KEY` (optional, free tier)
+   - `LOOKER_STUDIO_EMBED_URL` (optional, your Looker Studio embed URL)
+   - `DUCKDB_MEMORY_LIMIT=192MB`
+   - `DUCKDB_THREADS=1`
+5. Under **Configuration $\rightarrow$ Resource Limits** (critical for co-existing on 2 GB RAM):
+   - **Memory Limit:** `350M` (`350m`)
+   - **Memory Reservation / Soft Limit:** `256M`
+   - **CPU Limit:** `0.5`
+6. Click **Deploy** and monitor **Build & Container Logs** until the `Dockerfile` `HEALTHCHECK` (`/_stcore/health`) reports **Healthy**.
+
+### Step 4.4: Verify Container Health & Memory Limits on the VPS
 ```bash
-sudo mkdir -p /var/www/omnigrowth-ai
-sudo chown -R $USER:$USER /var/www/omnigrowth-ai
-git clone https://github.com/<your-username>/omnigrowth-ai.git /var/www/omnigrowth-ai
-cd /var/www/omnigrowth-ai
-
-python3 -m venv .venv
-source .venv/bin/activate
-pip install --no-cache-dir -r requirements.txt
-cp .env.example .env
-nano .env  # Paste your free GROQ_API_KEY and GEMINI_API_KEY
+# Check container health and real-time RAM usage (expect ~150-240 MB active, < 300 MB peak)
+docker stats --no-stream --format "table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.MemPerc}}"
 ```
-
-### Step 4.3: Install Cgroup-Isolated `systemd` Service (`deploy/omnigrowth.service`)
-Create `/etc/systemd/system/omnigrowth.service` with strict memory (`MemoryMax=350M`) and CPU (`CPUQuota=50%`) caps so your existing web apps on the VPS are never impacted:
-```ini
-[Unit]
-Description=OmniGrowth-AI Full-Stack Data Science Suite (Streamlit + DuckDB)
-After=network.target
-
-[Service]
-Type=simple
-User=www-data
-Group=www-data
-WorkingDirectory=/var/www/omnigrowth-ai
-EnvironmentFile=/var/www/omnigrowth-ai/.env
-Environment="MALLOC_TRIM_THRESHOLD_=65536"
-Environment="PYTHONUNBUFFERED=1"
-
-# Strict cgroups v2 isolation for shared 1 vCPU / 2 GB RAM VPS
-MemoryAccounting=true
-MemoryHigh=280M
-MemoryMax=350M
-CPUAccounting=true
-CPUQuota=50%
-
-ExecStart=/var/www/omnigrowth-ai/.venv/bin/streamlit run app/main.py \
-    --server.port=8501 \
-    --server.address=127.0.0.1 \
-    --server.headless=true \
-    --server.fileWatcherType=none \
-    --server.maxUploadSize=5 \
-    --browser.gatherUsageStats=false
-
-Restart=on-failure
-RestartSec=5
-
-[Install]
-WantedBy=multi-user.target
-```
-
-Enable and start the service:
-```bash
-sudo chown -R www-data:www-data /var/www/omnigrowth-ai
-sudo systemctl daemon-reload
-sudo systemctl enable omnigrowth.service
-sudo systemctl start omnigrowth.service
-sudo systemctl status omnigrowth.service
-```
-
-### Step 4.4: Configure Nginx Reverse Proxy (`deploy/nginx_omnigrowth.conf`)
-Pick an unused port internally (`127.0.0.1:8501`) and expose it on a dedicated subdomain (either `omnigrowth.yourdomain.com` or free wildcard DNS `omnigrowth.<YOUR-VPS-IP>.sslip.io`):
-```nginx
-server {
-    listen 80;
-    server_name omnigrowth.<YOUR-VPS-IP>.sslip.io;
-
-    client_max_body_size 5M;
-
-    location / {
-        proxy_pass http://127.0.0.1:8501;
-        proxy_http_version 1.1;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header Host $host;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
-        proxy_read_timeout 86400;
-    }
-
-    location /_stcore/stream {
-        proxy_pass http://127.0.0.1:8501/_stcore/stream;
-        proxy_http_version 1.1;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header Host $host;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
-        proxy_read_timeout 86400;
-    }
-}
-```
-
-Enable the site and provision free HTTPS via Let's Encrypt:
-```bash
-sudo ln -s /etc/nginx/sites-available/omnigrowth.conf /etc/nginx/sites-enabled/
-sudo nginx -t && sudo systemctl reload nginx
-sudo certbot --nginx -d omnigrowth.<YOUR-VPS-IP>.sslip.io
-```
+*(Note: Legacy bare-metal templates [`deploy/omnigrowth.service`](deploy/omnigrowth.service) and [`deploy/nginx_omnigrowth.conf`](deploy/nginx_omnigrowth.conf) remain in `deploy/` solely as reference if migrating off Coolify.)*
 
 ---
 
@@ -190,11 +120,11 @@ Run these checks locally and on your VPS before production release:
    - Confirms CUPED reduces variance by $1 - \rho_{X,Y}^2$ and Bayesian Expected Loss matches analytical integration.
    - Confirms Bass Diffusion S-curve recovers $(p, q, M)$ and `SciPy` SLSQP respects budget and inventory constraints.
    - Confirms SQL validator blocks destructive queries (`DROP`, `COPY`, `ALTER`) and `OpenPyXL` generates live Excel formulas.
-2. **VPS Memory Footprint Audit:**
+2. **Coolify / VPS Memory Footprint Audit:**
    ```bash
-   systemctl status omnigrowth.service | grep Memory
+   docker stats --no-stream
    ```
-   - Verify active memory stays between $140\text{ MB}$ and $240\text{ MB}$ (well below the $350\text{ MB}$ hard ceiling).
+   - Verify active container memory stays between $140\text{ MB}$ and $260\text{ MB}$ (well below the $350\text{ MB}$ container limit) and check the sidebar **Live Process RSS Memory** gauge inside the live Streamlit UI (`< 300 MB`).
 3. **Excel Formula Verification:**
    - Click **"Download 5-Tab Executive Financial Model (.xlsx)"** in Tab 5, open the file in LibreOffice Calc or Microsoft Excel, edit a baseline traffic assumption cell in `Tab 2 (GA4_Funnel_Economics)`, and verify that `Tab 1 (Executive_Summary)` automatically recalculates.
 

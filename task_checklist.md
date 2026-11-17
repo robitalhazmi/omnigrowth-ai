@@ -258,13 +258,14 @@
 
 ---
 
-## Phase 8: Co-Existing VPS Deployment ($1\text{ vCPU} / 2\text{ GB RAM}$) & Cloud Backup
+## Phase 8: Co-Existing VPS Deployment ($1\text{ vCPU} / 2\text{ GB RAM}$ via Coolify) & Cloud Backup
 
-- [x] **8.1 Create `systemd` Cgroup-Isolated Service (`deploy/omnigrowth.service`)**
-  - Configure `MemoryHigh=280M`, `MemoryMax=350M`, and `CPUQuota=50%` binding Streamlit to `127.0.0.1:8501` so existing VPS applications are completely protected.
+- [x] **8.1 Create Slim Coolify Container & Serving Dependencies (`Dockerfile`, `.dockerignore`, `requirements-serve.txt`, `deploy/docker-compose.coolify.yml`)**
+  - Exclude heavy offline training dependencies (`prophet`, `statsforecast`) from the VPS runtime container, set `OMP_NUM_THREADS=1` / `DUCKDB_MEMORY_LIMIT=192MB` / `DUCKDB_THREADS=1`, bind Streamlit to `0.0.0.0:8501` with `/_stcore/health` check, and cap resources at `350M` RAM / `0.50` vCPU.
 
-- [x] **8.2 Create Nginx Reverse Proxy Config (`deploy/nginx_omnigrowth.conf`)**
-  - Configure virtual host for `omnigrowth.<vps-ip>.sslip.io` (or custom subdomain) with WebSocket upgrade headers and Let's Encrypt TLS (`certbot --nginx`).
+- [x] **8.2 Preserve Optional Bare-Metal Reference Templates (`deploy/omnigrowth.service`, `deploy/nginx_omnigrowth.conf`)**
+  - Keep `systemd` cgroup and Nginx WebSocket configs as non-Coolify fallback references (do not run bare-metal Nginx alongside Coolify's Traefik proxy).
 
-- [x] **8.3 Polish Portfolio `README.md` & Deploy Live**
+- [x] **8.3 Polish Portfolio `README.md`, `walkthrough_guide.md`, & `implementation_plan.md` for Coolify Deploy**
+  - Document Coolify `Dockerfile` build pack (`Port: 8501`), Traefik HTTPS/WebSocket routing, env vars, Looker Studio embedding, and `docker stats --no-stream` memory audit (`< 300 MB` RSS).
   - Document architecture diagrams, live VPS URL, Streamlit Community Cloud backup URL, Looker Studio link, and mathematical methodology in `README.md`.
