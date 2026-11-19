@@ -1,11 +1,14 @@
 # OmniGrowth-AI — Full-Stack Product Growth, Experimentation & Prescriptive Analytics Suite
 
 [![CI](https://github.com/robitalhazmi/omnigrowth-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/robitalhazmi/omnigrowth-ai/actions/workflows/ci.yml)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-OmniGrowth--AI-059669?logo=streamlit&logoColor=white)](https://omnigrowth.202.10.35.181.sslip.io/)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![DuckDB](https://img.shields.io/badge/OLAP-DuckDB-FFF000?logo=duckdb&logoColor=black)](https://duckdb.org/)
 [![Code Style: Ruff](https://img.shields.io/badge/code%20style-ruff-261230?logo=ruff&logoColor=D7FF64)](https://docs.astral.sh/ruff/)
 
 **OmniGrowth-AI** is a production-grade Full-Stack Data Science, Experimentation, and Prescriptive Analytics platform for omnichannel retail and D2C product growth. It bridges offline statistical modeling with a low-memory online analytical serving engine designed to run comfortably within a $300\text{ MB}$ RSS memory envelope on a shared $1\text{ vCPU} / 2\text{ GB RAM}$ Linux VPS.
+
+> **Live Demo:** [https://omnigrowth.202.10.35.181.sslip.io/](https://omnigrowth.202.10.35.181.sslip.io/)
 
 ---
 
@@ -151,7 +154,7 @@ Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for de
 
 ## Production VPS Deployment (Co-Existing 1 vCPU / 2 GB RAM via Coolify)
 
-OmniGrowth-AI ships ready for container deployment on **Coolify** alongside existing VPS services while strictly capping CPU and RSS memory:
+OmniGrowth-AI is live at [https://omnigrowth.202.10.35.181.sslip.io/](https://omnigrowth.202.10.35.181.sslip.io/) and ships ready for container deployment on **Coolify** alongside existing VPS services while strictly capping CPU and RSS memory:
 
 1. **Pre-Compute Serving Artifacts Locally (already committed in `data/processed/`):**
    ```bash
